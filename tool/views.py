@@ -20,6 +20,7 @@ from django.utils import timezone
 # import weasyprint
 import datetime
 # Create your views here.
+from django.core.paginator import Paginator,PageNotAnInteger,EmptyPage
 @unauthorized_user
 def loginuser(request):
     if request.method == 'POST':
@@ -149,6 +150,7 @@ def api_nidan(request):  # to retrive all the nidan api data and store it in to 
     }
     return render(request, 'ticket/nidan_all_tickets.html', dic)
 
+
 # nidan_tickets = NidanTicket.objects.all()
 #     data = [
 #         'Docket_Number', 'Citizen_Name', 'Phone', 'Address', 'Email', 'Municipality ', 'Section', 'Message', 'Subsection', 'Status', 'Grievance_Remark', 'Callstart', 'Created_Date', 'Updated_Date',
@@ -192,6 +194,8 @@ def api_nidan(request):  # to retrive all the nidan api data and store it in to 
 #     response['Content-Disposition']=f'filename=nidan.pdf'
 #     weasyprint.HTML(string=html).write_pdf(response,stylesheets=[weasyprint.CSS(settings.STATIC_ROOT/'css/pdf.css')])
 #     return response
+
+
 @login_required(login_url='login')
 def generateNidanExcel(request):
     response = HttpResponse(content='')
@@ -377,16 +381,27 @@ def updateTicket(request, pk):
 @login_required(login_url='login')
 @allowed_users(allowed_roles=['operator', 'admin'])
 def allTicket(request):
+    query = request.GET.get('query') if request.GET.get(
+        'query') != None else ''
+    page_number = request.GET.get('page',1)
+    tickets = None
+    date = request.GET.get('date')
+    print(date)
     if str(request.user.groups.all()[0]) == 'admin':
         tickets_object = Ticket.objects.all()
     if str(request.user.groups.all()[0]) == 'operator':
         tickets_object = request.user.ticket_operator.ticket_set.all()
-    query = request.GET.get('query') if request.GET.get(
-        'query') != None else ''
     tickets = tickets_object.filter(
         Q(contact__icontains=query) |
         Q(full_name__icontains=query)
-    )
+        )
+    paginator = Paginator(tickets,2)
+    try:
+        tickets = paginator.page(page_number)
+    except PageNotAnInteger:
+        tickets = paginator.page(1)
+    except EmptyPage:
+        tickets = paginator.page(paginator.num_pages)
     return render(request, 'ticket/alltickets.html', {'tickets': tickets})
 
 
@@ -396,6 +411,14 @@ def openticketslist(request):
         tickets = tickets = Ticket.objects.filter(status='Open')
     if str(request.user.groups.all()[0]) == 'operator':
         tickets = request.user.ticket_operator.ticket_set.filter(status='Open')
+    page_number =request.GET.get('page',1)
+    paginator = Paginator(tickets,2)
+    try:
+        tickets = paginator.page(page_number)
+    except PageNotAnInteger:
+        tickets = paginator.page(1)
+    except EmptyPage:
+        tickets = paginator.page(paginator.num_pages)
     dic = {
         'tickets': tickets,
     }
@@ -408,6 +431,14 @@ def reopenticketslist(request):
         tickets = tickets = Ticket.objects.filter(status='Reopened')
     if str(request.user.groups.all()[0]) == 'operator':
         tickets = request.user.ticket_operator.ticket_set.filter(status='Reopened')
+    page_number =request.GET.get('page',1)
+    paginator = Paginator(tickets,2)
+    try:
+        tickets = paginator.page(page_number)
+    except PageNotAnInteger:
+        tickets = paginator.page(1)
+    except EmptyPage:
+        tickets = paginator.page(paginator.num_pages)
     dic = {
         'tickets': tickets,
     }
@@ -420,6 +451,14 @@ def resolvedticketslist(request):
         tickets = tickets = Ticket.objects.filter(status='Resolved')
     if str(request.user.groups.all()[0]) == 'operator':
         tickets = request.user.ticket_operator.ticket_set.filter(status='Resolved')
+    page_number =request.GET.get('page',1)
+    paginator = Paginator(tickets,2)
+    try:
+        tickets = paginator.page(page_number)
+    except PageNotAnInteger:
+        tickets = paginator.page(1)
+    except EmptyPage:
+        tickets = paginator.page(paginator.num_pages)
     dic = {
         'tickets': tickets,
     }
@@ -432,6 +471,14 @@ def closeticketslist(request):
         tickets = tickets = Ticket.objects.filter(status='Closed')
     if str(request.user.groups.all()[0]) == 'operator':
         tickets = request.user.ticket_operator.ticket_set.filter(status='Closed')
+    page_number =request.GET.get('page',1)
+    paginator = Paginator(tickets,2)
+    try:
+        tickets = paginator.page(page_number)
+    except PageNotAnInteger:
+        tickets = paginator.page(1)
+    except EmptyPage:
+        tickets = paginator.page(paginator.num_pages)
     dic = {
         'tickets': tickets,
     }
@@ -452,11 +499,11 @@ def closeticketslist(request):
 #     response['Content-Disposition']=f'filename=tickets.pdf'
 #     weasyprint.HTML(string=html).write_pdf(response,stylesheets=[weasyprint.CSS(settings.STATIC_ROOT/'css/pdf.css')])
 #     return response
+
 @login_required(login_url='login')
 def generateTicketExcel(request):
     response = HttpResponse(content='')
     date = timezone.datetime.now()
-    print(date)
     today = datetime.date.today()
     filname = f"Ticket_Data_{today}.csv"
     response['Content-Disposition']=f'attechment; filename="{filname}"'

@@ -1,15 +1,26 @@
 <div class="row">
-    <div class="mt-5 col-6">
+    <div class="mt-5 col-4">
         <form class="form-inline my-2 my-lg-0" id="searching-input" action="{% url 'all_tickets'%}">
             <input class="form-control mr-sm-2" type="search" placeholder="Enter name" aria-label="Search" name="query">
             <input class="btn btn-outline-success my-2 my-sm-0" type="submit" value="Search" />
-        </form>                                                         
+        </form>
     </div>
-    <div class="col-6 mt-5 text-right">
-        <form action=""class='form-inline my-2 my-lg-0'>
+
+    <div class="mt-5 col-4">
+        <div class="ui calendar" id="example2">
+            <form action="{% url 'all_tickets' %}">
+                <div class="ui input left icon">
+                    <i class="calendar icon"></i>
+                    <input type="text" placeholder="Date" name="date"/>
+                </div>
+                <input type="submit" value="search"/>
+            </form>
+            
+        </div>
+    </div>
+    <div class="col-4 mt-5 text-right">
+        <form action="" class='form-inline my-2 my-lg-0'>
             <a href="{% url 'generate_ticket_pdf' %}" class="btn btn-success"> Download Report </a>
         </form>
     </div>
 </div>
-
-
